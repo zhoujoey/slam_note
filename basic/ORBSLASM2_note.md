@@ -67,33 +67,23 @@ nmatches表示匹配到的对应点对数。
 
 这里的H和F分别满足下列关系：
 
----
-$x_c = H_{cr} x_r   \\
-x_c^T F_{cr} x_r  = 0$
+<a href="https://www.codecogs.com/eqnedit.php?latex=\bg_white&space;\large&space;\mathbf{$x_c&space;=&space;H_{cr}&space;x_r&space;\\&space;x_c^T&space;F_{cr}&space;x_r&space;=&space;0$}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\bg_white&space;\large&space;\mathbf{$x_c&space;=&space;H_{cr}&space;x_r&space;\\&space;x_c^T&space;F_{cr}&space;x_r&space;=&space;0$}" title="\large \mathbf{$x_c = H_{cr} x_r \\ x_c^T F_{cr} x_r = 0$}" /></a>
 
 线程threadH调用Initializer::FindHomography函数，计算单应性矩阵H，采用归一化的直接线性变换（normalized DLT）。线程threadF调用Initializer::FindFundamental函数计算基础矩阵F，使用归一化8点法。为了评估哪个模型更合适，文中使用SHSH和SFSF来计算各自的分值。分别调用Initializer::CheckHomography函数和Initializer::CheckFundamental函数进行计算，计算的方法如下所示，其中SMSM统一表示SHSH和SFSF： 
 
----
-S_M = \sum_i(\rho_M(d^2_{cr}(x^i_c , x^i_r,M) + \rho_M(d^2_{rc}(x^i_c , x^i_r,M))  \\
-\rho_M(d^2) = 
-\begin{cases}
-\tau-d^2\ \ if\ \ d^2<T_M \\
-0\ \ if\ \ d^2 \geq T_M
-\end{cases}
+<a href="https://www.codecogs.com/eqnedit.php?latex=\bg_white&space;\large&space;S_M&space;=&space;\sum_i(\rho_M(d^2_{cr}(x^i_c&space;,&space;x^i_r,M)&space;&plus;&space;\rho_M(d^2_{rc}(x^i_c&space;,&space;x^i_r,M))&space;\\&space;\rho_M(d^2)&space;=&space;\begin{cases}&space;\tau-d^2\&space;\&space;if\&space;\&space;d^2<T_M&space;\\&space;0\&space;\&space;if\&space;\&space;d^2&space;\geq&space;T_M&space;\end{cases}" target="_blank"><img src="https://latex.codecogs.com/png.latex?\bg_white&space;\large&space;S_M&space;=&space;\sum_i(\rho_M(d^2_{cr}(x^i_c&space;,&space;x^i_r,M)&space;&plus;&space;\rho_M(d^2_{rc}(x^i_c&space;,&space;x^i_r,M))&space;\\&space;\rho_M(d^2)&space;=&space;\begin{cases}&space;\tau-d^2\&space;\&space;if\&space;\&space;d^2<T_M&space;\\&space;0\&space;\&space;if\&space;\&space;d^2&space;\geq&space;T_M&space;\end{cases}" title="\large S_M = \sum_i(\rho_M(d^2_{cr}(x^i_c , x^i_r,M) + \rho_M(d^2_{rc}(x^i_c , x^i_r,M)) \\ \rho_M(d^2) = \begin{cases} \tau-d^2\ \ if\ \ d^2<T_M \\ 0\ \ if\ \ d^2 \geq T_M \end{cases}" /></a>
+
 
 其中，d2cr和d2rc表示对称的转换误差，分别是从当前帧到参考帧的变换误差和参考帧到当前帧的变换误差。这里： 
+![](https://latex.codecogs.com/png.latex?\bg_white&space;\large&space;T_H&space;=&space;5.99,&space;\&space;\&space;\&space;T_F&space;=&space;3.84&space;\\&space;\tau&space;=&space;T_H)
 
----
-T_H = 5.99, \ \ \ 
-T_F = 3.84 \\
-\tau = T_H
+
 
 三、模型选择
 
   文中认为，当场景是一个平面、或近似为一个平面、或者视差较小的时候，可以使用单应性矩阵H，而使用基础矩阵F恢复运动，需要场景是一个非平面、视差大的场景。这个时候，文中使用下面所示的一个机制，来估计两个模型的优劣：
 
----
-R_H = \frac{S_H}{S_H+S_F}
+![](https://latex.codecogs.com/png.latex?\bg_white&space;\large&space;R_H&space;=&space;\frac{S_H}{S_H&plus;S_F})
 
 当RH大于0.45时，选择从单应性变换矩阵还原运动。不过ORB_SLAM2源代码中使用的是0.4作为阈值，如下：
 
@@ -115,17 +105,8 @@ R_H = \frac{S_H}{S_H+S_F}
 
  在得到基础矩阵F，并且一直摄像机内参K的情况下，可以计算得到本质矩阵E，然后使用[2]中的方法，恢复出4个运动假设的解。这一部分的理论推导在之前博客做过介绍。其中基础矩阵F得到本质矩阵E的公式如下所示：
 
-![](http://latex.codecogs.com/gif.latex?\\frac{\\partial J}{\\partial \\theta_k^{(j)}}=\\sum_{i:r(i,j)=1}{\\big((\\theta^{(j)})^Tx^{(i)}-y^{(i,j)}\\big)x_k^{(i)}}+\\lambda \\xtheta_k^{(j)})
+![](https://latex.codecogs.com/png.latex?\bg_white&space;\large&space;E_{rc}&space;=&space;K^TF_{rc}K)
 
-
-
-
----
-
-
-
-
-E_{rc} = K^TF_{rc}K
 
 同样的，这4个解中只有一个是合理的，可以使用可视化约束来选择，本文使用与单应性矩阵做sfm一样的方法，即将4种解都进行三角化，然后从中选择出最合适的解。这里使用的是Initializer::ReconstructF函数。
 

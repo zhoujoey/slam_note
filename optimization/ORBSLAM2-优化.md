@@ -1,6 +1,6 @@
 # Basic Note
 
-## 文章1
+## ORBSLAM中的优化
 ORB_SLAM中使用到g2o进行优化的函数有四个: 
 GlobalBundleAdjustemnt 
 PoseOptimization 
@@ -77,8 +77,12 @@ OptimizeSim3.
 总结一下, ORB_SLAM中的优化分为多个层次, 从低到高为:
 
 PoseOptimization: 优化单帧位姿. 每个帧可见多个地图点, 可以建立多个边连接, 构成图进行优化. 优化单一帧的SE3位姿.
+
 OptimizeSim3: 优化两帧之间的位姿变换, 因为两帧之间可以看到多个相同的地图点, 可以构成一个超定方程组, 可以最小化误差优化. 优化帧间变化的SIM3位姿与地图的VertexSBAPointXYZ位姿
+
 LocalBundleAdjustment: 在一个CovisbilityMap内进行优化. 在一定范围的keyframe中,可以看到同一块地图, 即是CovisbilityMap. 连接CovisbilityMap内的每一个map点与可见它的所有keyframe, 放在一起进行优化. 这个优化是双向的, 既优化地图点的VertexSBAPointXYZ位姿, 又优化Camera的SE3位姿.
+
 OptimizeEssentialGraph: 加入Loop Closure的考虑, Covisbility图中的keyframe相互连起来, Keyframe之间有前后相连, 于是不同的Covisbility图也可以联系起来. 这是一个大范围的优化, 主要是加入了Loop Closure约束. 优化的是Camera的SIM3位姿.
+
 GlobalBundleAdjustment: 最大范围的优化, 优化所有Camera的SE3位姿与地图点的XYZ位姿.
 
